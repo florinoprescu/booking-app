@@ -6,9 +6,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+/*use Illuminate\Foundation\Auth\ThrottlesLogins;*/
 
 class UsersController extends Controller
 {
+    /*use ThrottlesLogins;
+
+    protected $maxAttempts = 5;
+    protected $decayMinutes = 1;*/
     /**
      * Create a new controller instance.
      *
@@ -30,11 +35,41 @@ class UsersController extends Controller
             'password' => 'required'
         ]);
         $user = User::where('email', $request->input('email'))->first();
-        if (!empty($user) && Hash::check($request->input('password'), $user->password)) {//check password if user with that email exists
+        if($user->failed_login_count > 5 && (time() - strtotime($user->failed_login_date)) <= 60) {
+            return response()->json(['status' => 'fail'], 429);//Too Many Requests
+        }
+        elseif($user->failed_login_count > 5) {
+            User::where('email', $request->input('email'))->update([
+                'failed_login_count' => 1,
+                'failed_login_date' => \Carbon\Carbon::now()->toDateTimeString()
+            ]);
+            return response()->json(['status' => 'fail'], 401);//unauthorized
+        }
+
+        if (!empty($user) && Hash::check($request->input('password'), $user->password) && $user) {//check email, password if user with that email exists
             $apikey = $this->generateApiToken();
-            User::where('email', $request->input('email'))->update(['api_key' => "$apikey"]);
+            User::where('email', $request->input('email'))->update([
+                'api_key' => "$apikey",
+                'failed_login_count' => 0,
+                'failed_login_date' => NULL
+            ]);
             return response()->json(['status' => 'success', 'api_key' => $apikey]);
-        } else {
+        }
+        elseif(!empty($user)) {//user exists but password wrong
+            if($user->failed_login_date) {
+                User::where('email', $request->input('email'))->update([
+                    'failed_login_count' => $user->failed_login_count + 1
+                ]);
+            }
+            else {
+                User::where('email', $request->input('email'))->update([
+                    'failed_login_count' => $user->failed_login_count + 1,
+                    'failed_login_date' => \Carbon\Carbon::now()->toDateTimeString()
+                ]);
+            }
+            return response()->json(['status' => 'fail'], 401);//unauthorized
+        }
+        else {
             return response()->json(['status' => 'fail'], 401);//unauthorized
         }
     }
