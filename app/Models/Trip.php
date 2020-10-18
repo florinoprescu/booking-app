@@ -9,17 +9,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Lumen\Auth\Authorizable;
 
-class User extends Model implements AuthenticatableContract, AuthorizableContract
+class Trip extends Model
 {
-    use Authenticatable, Authorizable, HasFactory;
-
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password'
+        'slug', 'title', 'description', 'location', 'price', 'start_date', 'end_date'
     ];
 
     /**
@@ -27,12 +25,6 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      *
      * @var array
      */
-    protected $hidden = [
-        'password',
-    ];
+    protected $hidden = [];
 
-    public function trips()
-    {
-        return $this->belongsToMany('App\Models\Trip', 'booking', 'user_id', 'trip_id');
-    }
 }
