@@ -22,7 +22,8 @@ class CreateTripsTable extends Migration
             $table->unsignedInteger('price');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->timestamp();
+            $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
         });
     }
 

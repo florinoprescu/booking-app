@@ -26,6 +26,4 @@ class Trip extends Model
      * @var array
      */
     protected $hidden = [];
-
-    public $timestamps = true;
 }

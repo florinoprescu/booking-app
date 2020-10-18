@@ -14,10 +14,32 @@ class TripsController extends Controller
 
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $trips = Trip::all();
-        return response()->json(['status' => 'success', 'trips' => $trips]);
+        $searching = $request->all();
+        $trips = Trip::orderBy(@$searching['order_by'] ? $searching['order_by'] : 'created_at', @$searching['order_type'] ? $searching['order_type'] : 'asc');
+        if(isset($searching['start_date'])) {
+            $trips->where('start_date', '>=', $searching['start_date']);
+        }
+        if(isset($searching['end_date'])) {
+            $trips->where('end_date', '<=', $searching['end_date']);
+        }
+        if(isset($searching['price_from'])) {
+            $trips->where('price', '>=', $searching['price_from']);
+        }
+        if(isset($searching['price_to'])) {
+            $trips->where('price', '<=', $searching['price_to']);
+        }
+        if(isset($searching['keyword'])) {
+            $trips->where(function ($q) use ($searching){
+                $q->where('title', 'like', '%'.$searching['keyword'].'%')
+                    ->orWhere('description', 'like', '%'.$searching['keyword'].'%')
+                    ->orWhere('slug', 'like', '%'.$searching['keyword'].'%');
+            });
+        }
+        $data = $trips->get();
+
+        return response()->json(['status' => 'success', 'trips' => $data]);
     }
 
     public function store(Request $request)
