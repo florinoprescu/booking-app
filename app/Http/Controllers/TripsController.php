@@ -2,82 +2,78 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Trip;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TripsController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
-        $this->middleware('auth');
+
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        $userTrips = Auth::user()->trips()->get();
-        return response()->json(['status' => 'success', 'data' => $userTrips]);
+        $trips = Trip::all();
+        return response()->json(['status' => 'success', 'trips' => $trips]);
     }
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+
     public function store(Request $request)
     {
+        $this->validate($request, [
+            'slug' => 'required',
+            'title' => 'required',
+            'location' => 'required',
+            'price' => 'required',
+            'start_date' => 'required',
+            'end_date' => 'required',
+        ]);
 
+        $added = Trip::insert($request->all());
+        if($added){
+            return response()->json(['status' => 'success']);
+        }else {
+            return response()->json(['status' => 'fail']);
+        }
     }
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function show($id)
     {
-
+        $trip = Trip::where('id', $id)->first();
+        return response()->json($trip);
     }
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+
+    public function showBySlug($slug)
     {
-
+        $trip = Trip::where('slug', $slug)->first();
+        return response()->json($trip);
     }
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function update(Request $request, $id)
     {
-
+        $this->validate($request, [
+            'slug' => 'required',
+            'title' => 'required',
+            'location' => 'required',
+            'price' => 'required',
+            'start_date' => 'required',
+            'end_date' => 'required',
+        ]);
+        $updated = Trip::where('id', $id)->update($request->all());
+        if($updated){
+            return response()->json(['status' => 'success']);
+        }
+        return response()->json(['status' => 'fail']);
     }
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function destroy($id)
     {
-
+        if(Trip::destroy($id)){
+            return response()->json(['status' => 'success']);
+        }
+        return response()->json(['status' => 'fail']);
     }
 
 }

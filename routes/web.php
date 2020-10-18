@@ -18,5 +18,19 @@ $router->get('/', function () use ($router) {
 });
 
 $router->post('login', 'UsersController@authenticate');
-
 $router->post('register', 'UsersController@register');
+
+$router->group(['prefix' => 'trip'], function () use ($router) {
+    $router->get('/', 'TripsController@index');
+    $router->post('/store', 'TripsController@store');
+    $router->get('/show/{id}', 'TripsController@show');
+    $router->get('/show-by-slug/{slug}', 'TripsController@showBySlug');
+    $router->put('/update/{id}', 'TripsController@update');
+    $router->delete('/destroy/{id}', 'TripsController@destroy');
+});
+
+$router->group(['prefix' => 'booking'], function () use ($router) {
+    $router->get('/', 'BookingController@index');
+    $router->post('/make-reservation/{slug}', 'BookingController@makeReservation');
+    $router->delete('/cancel-reservation/{slug}', 'BookingController@cancelReservation');
+});
